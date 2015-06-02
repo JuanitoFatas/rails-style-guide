@@ -19,6 +19,11 @@ Rails 是一個堅持己見的框架，而這也是一份堅持己見的指南�
 
 * [简体中文](https://github.com/JuanitoFatas/rails-style-guide/blob/master/README-zhCN.md)
 * [英文原版](https://github.com/JuanitoFatas/rails-style-guide/blob/master/README.md)
+* [德文](https://github.com/arbox/de-rails-style-guide/blob/master/README-deDE.md)
+* [日文](https://github.com/satour/rails-style-guide/blob/master/README-jaJA.md)
+* [俄文](https://github.com/arbox/rails-style-guide/blob/master/README-ruRU.md)
+* [土耳其文](https://github.com/tolgaavci/rails-style-guide/blob/master/README-trTR.md)
+* [韓文](https://github.com/pureugong/rails-style-guide/blob/master/README-koKR.md)
 
 # 目錄
 
