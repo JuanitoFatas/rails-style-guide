@@ -17,9 +17,11 @@ Translations of the guide are available in the following languages:
 
 * [Chinese Simplified](https://github.com/JuanitoFatas/rails-style-guide/blob/master/README-zhCN.md)
 * [Chinese Traditional](https://github.com/JuanitoFatas/rails-style-guide/blob/master/README-zhTW.md)
+* [German](https://github.com/arbox/de-rails-style-guide/blob/master/README-deDE.md)
 * [Japanese](https://github.com/satour/rails-style-guide/blob/master/README-jaJA.md)
 * [Russian](https://github.com/arbox/rails-style-guide/blob/master/README-ruRU.md)
 * [Turkish](https://github.com/tolgaavci/rails-style-guide/blob/master/README-trTR.md)
+* [Korean](https://github.com/pureugong/rails-style-guide/blob/master/README-koKR.md)
 
 # The Rails Style Guide
 
@@ -54,7 +56,6 @@ programming resources.
 * [Mailers](#mailers)
 * [Time](#time)
 * [Bundler](#bundler)
-* [Flawed Gems](#flawed-gems)
 * [Managing processes](#managing-processes)
 
 ## Configuration
@@ -168,6 +169,17 @@ programming resources.
   # routes.rb
   resources :posts do
     resources :comments
+  end
+  ```
+  
+* <a name="namespaced-routes"></a>
+  If you need to nest routes more than 1 level deep then use the `shallow: true` option. This will save user from long urls `posts/1/comments/5/versions/7/edit` and you from long url helpers `edit_post_comment_version`.
+  
+  ```Ruby
+  resources :posts, shallow: true do
+    resources :comments do
+      resources :versions
+    end
   end
   ```
 
@@ -444,32 +456,6 @@ programming resources.
   end
   ```
 
-  Note that this style of scoping cannot be chained in the same way as named scopes. For instance:
-
-  ```Ruby
-  # unchainable
-  class User < ActiveRecord::Base
-    def User.old
-      where('age > ?', 80)
-    end
-
-    def User.heavy
-      where('weight > ?', 200)
-    end
-  end
-  ```
-
-  In this style both `old` and `heavy` work individually, but you cannot call `User.old.heavy`, to chain these scopes use:
-
-  ```Ruby
-  # chainable
-  class User < ActiveRecord::Base
-    scope :old, -> { where('age > 60') }
-    scope :heavy, -> { where('weight > 200') }
-  end
-  ```
-
-
 * <a name="beware-update-attribute"></a>
   Beware of the behavior of the
   [`update_attribute`](http://api.rubyonrails.org/classes/ActiveRecord/Persistence.html#method-i-update_attribute)
@@ -656,6 +642,33 @@ when you need to retrieve a single record by some attributes.
   # good
   User.where.not(id: id)
   ```
+* <a name="squished-heredocs"></a>
+  When specifying an explicit query in a method such as `find_by_sql`, use
+  heredocs with `squish`. This allows you to legibly format the SQL with
+  line breaks and indentations, while supporting syntax highlighting in many
+  tools (including GitHub, Atom, and RubyMine).
+<sup>[[link](#squished-heredocs)]</sup>
+
+  ```Ruby
+  User.find_by_sql(<<SQL.squish)
+    SELECT
+      users.id, accounts.plan
+    FROM
+      users
+    INNER JOIN
+      accounts
+    ON
+      accounts.user_id = users.id
+    # further complexities...
+  SQL
+  ```
+
+  [`String#squish`](http://apidock.com/rails/String/squish) removes the indentation and newline characters so that your server
+  log shows a fluid string of SQL rather than something like this:
+
+  ```
+  SELECT\n    users.id, accounts.plan\n  FROM\n    users\n  INNER JOIN\n    acounts\n  ON\n    accounts.user_id = users.id
+  ```
 
 ## Migrations
 
@@ -768,8 +781,8 @@ when you need to retrieve a single record by some attributes.
 
 * <a name="organize-locale-files"></a>
   Separate the texts used in the views from translations of ActiveRecord
-  attributes. Place the locale files for the models in a folder `models` and the
-  texts used in the views in folder `views`.
+  attributes. Place the locale files for the models in a folder `locales/models` and the
+  texts used in the views in folder `locales/views`.
 <sup>[[link](#organize-locale-files)]</sup>
 
   * When organization of the locale files is done with additional directories,
@@ -977,7 +990,7 @@ your application.
 
 * <a name="tz-config"></a>
   Config your timezone accordingly in `application.rb`.
-<sup>[[link](#time-now)]</sup>
+<sup>[[link](#tz-config)]</sup>
 
   ```Ruby
   config.time_zone = 'Eastern European Time'
@@ -1055,31 +1068,6 @@ your application.
   randomly generated file - it makes sure that all of your team members get the
   same gem versions when they do a `bundle install`.
 <sup>[[link](#gemfile-lock)]</sup>
-
-## Flawed Gems
-
-This is a list of gems that are either problematic or superseded by
-other gems. You should avoid using them in your projects.
-
-* [rmagick](http://rmagick.rubyforge.org/) - this gem is notorious for its
-  memory consumption. Use
-  [minimagick](https://github.com/minimagick/minimagick) instead.
-
-* [autotest](http://www.zenspider.com/ZSS/Products/ZenTest/) - old solution for
-  running tests automatically. Far inferior to
-  [guard](https://github.com/guard/guard) and
-  [watchr](https://github.com/mynyml/watchr).
-
-* [rcov](https://github.com/relevance/rcov) - code coverage tool, not compatible
-  with Ruby 1.9. Use [SimpleCov](https://github.com/colszowka/simplecov)
-  instead.
-
-* [therubyracer](https://github.com/cowboyd/therubyracer) - the use of this gem
-  in production is strongly discouraged as it uses a very large amount of
-  memory. I'd suggest using `node.js` instead.
-
-This list is also a work in progress. Please, let me know if you know other
-popular, but flawed gems.
 
 ## Managing processes
 
