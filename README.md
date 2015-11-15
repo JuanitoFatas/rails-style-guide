@@ -11,7 +11,7 @@ complementary guide to the already existing community-driven
 Some of the advice here is applicable only to Rails 4.0+.
 
 You can generate a PDF or an HTML copy of this guide using
-[Transmuter](https://github.com/TechnoGate/transmuter).
+[Transmuter](https://github.com/kalbasit/transmuter).
 
 Translations of the guide are available in the following languages:
 
@@ -866,7 +866,7 @@ your application.
   When possible, use gemified versions of assets (e.g.
   [jquery-rails](https://github.com/rails/jquery-rails),
   [jquery-ui-rails](https://github.com/joliss/jquery-ui-rails),
-  [bootstrap-sass](https://github.com/thomas-mcdonald/bootstrap-sass),
+  [bootstrap-sass](https://github.com/twbs/bootstrap-sass),
   [zurb-foundation](https://github.com/zurb/foundation)).
 <sup>[[link](#gem-assets)]</sup>
 
@@ -1083,8 +1083,8 @@ you have time to spare:
 
 * [The Rails 4 Way](http://www.amazon.com/The-Rails-Addison-Wesley-Professional-Ruby/dp/0321944275)
 * [Ruby on Rails Guides](http://guides.rubyonrails.org/)
-* [The RSpec Book](http://pragprog.com/book/achbd/the-rspec-book)
-* [The Cucumber Book](http://pragprog.com/book/hwcuc/the-cucumber-book)
+* [The RSpec Book](https://pragprog.com/book/achbd/the-rspec-book)
+* [The Cucumber Book](https://pragprog.com/book/hwcuc/the-cucumber-book)
 * [Everyday Rails Testing with RSpec](https://leanpub.com/everydayrailsrspec)
 * [Better Specs for RSpec](http://betterspecs.org)
 
@@ -1098,9 +1098,9 @@ Feel free to open tickets or send pull requests with improvements. Thanks in
 advance for your help!
 
 You can also support the project (and RuboCop) with financial contributions via
-[gittip](https://www.gittip.com/bbatsov).
+[gittip](https://gratipay.com/~bbatsov/).
 
-[![Support via Gittip](https://rawgithub.com/twolfson/gittip-badge/0.2.0/dist/gittip.png)](https://www.gittip.com/bbatsov)
+[![Support via Gittip](https://rawgithub.com/twolfson/gittip-badge/0.2.0/dist/gittip.png)](https://gratipay.com/~bbatsov/)
 
 ## How to Contribute?
 
