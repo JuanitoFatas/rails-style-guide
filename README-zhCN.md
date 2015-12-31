@@ -629,7 +629,7 @@
 <sup>[[link](#foreign-key-constraints)]</sup>
 
 * <a name="change-vs-up-down"></a>
-* 书写建设性的迁移（添加表或列）时，应使用 `change` 方法而不是 `up` 或 `down` 方法。
+  书写建设性的迁移（添加表或列）时，应使用 `change` 方法而不是 `up` 或 `down` 方法。
 <sup>[[link](#change-vs-up-down)]</sup>
 
   ```Ruby
