@@ -11,7 +11,7 @@ complementary guide to the already existing community-driven
 Some of the advice here is applicable only to Rails 4.0+.
 
 You can generate a PDF or an HTML copy of this guide using
-[Transmuter](https://github.com/kalbasit/transmuter).
+[Pandoc](http://pandoc.org/).
 
 Translations of the guide are available in the following languages:
 
@@ -22,6 +22,7 @@ Translations of the guide are available in the following languages:
 * [Russian](https://github.com/arbox/rails-style-guide/blob/master/README-ruRU.md)
 * [Turkish](https://github.com/tolgaavci/rails-style-guide/blob/master/README-trTR.md)
 * [Korean](https://github.com/pureugong/rails-style-guide/blob/master/README-koKR.md)
+* [Vietnamese](https://github.com/CQBinh/rails-style-guide/blob/master/README-viVN.md)
 
 # The Rails Style Guide
 
@@ -46,6 +47,7 @@ programming resources.
 * [Configuration](#configuration)
 * [Routing](#routing)
 * [Controllers](#controllers)
+  * [Rendering](#rendering)
 * [Models](#models)
   * [ActiveRecord](#activerecord)
   * [ActiveRecord Queries](#activerecord-queries)
@@ -54,6 +56,7 @@ programming resources.
 * [Internationalization](#internationalization)
 * [Assets](#assets)
 * [Mailers](#mailers)
+* [Active Support Core Extensions](#active-support-core-extensions)
 * [Time](#time)
 * [Bundler](#bundler)
 * [Managing processes](#managing-processes)
@@ -171,10 +174,10 @@ programming resources.
     resources :comments
   end
   ```
-  
+
 * <a name="namespaced-routes"></a>
   If you need to nest routes more than 1 level deep then use the `shallow: true` option. This will save user from long urls `posts/1/comments/5/versions/7/edit` and you from long url helpers `edit_post_comment_version`.
-  
+
   ```Ruby
   resources :posts, shallow: true do
     resources :comments do
@@ -226,6 +229,74 @@ programming resources.
   Share no more than two instance variables between a controller and a view.
 <sup>[[link](#shared-instance-variables)]</sup>
 
+
+### Rendering
+
+* <a name="inline-rendering"></a>
+  Prefer using a template over inline rendering.
+<sup>[[link](#inline-rendering)]</sup>
+
+```Ruby
+# very bad
+class ProductsController < ApplicationController
+  def index
+    render inline: "<% products.each do |p| %><p><%= p.name %></p><% end %>", type: :erb
+  end
+end
+
+# good
+## app/views/products/index.html.erb
+<%= render partial: 'product', collection: products %>
+
+## app/views/products/_product.html.erb
+<p><%= product.name %></p>
+<p><%= product.price %></p>
+
+## app/controllers/foo_controller.rb
+class ProductsController < ApplicationController
+  def index
+    render :index
+  end
+end
+```
+
+* <a name="plain-text-rendering"></a>
+  Prefer `render plain:` over `render text:`.
+<sup>[[link](#plain-text-rendering)]</sup>
+
+```Ruby
+# bad - sets MIME type to `text/html`
+...
+render text: 'Ruby!'
+...
+
+# bad - requires explicit MIME type declaration
+...
+render text: 'Ruby!', content_type: 'text/plain'
+...
+
+# good - short and precise
+...
+render plain: 'Ruby!'
+...
+```
+
+* <a name="http-status-code-symbols"></a>
+  Prefer [corresponding symbols](https://gist.github.com/mlanett/a31c340b132ddefa9cca) to numeric HTTP status codes. They are meaningful and do not look like "magic" numbers for less known HTTP status codes.
+<sup>[[link](#http-status-code-symbols)]</sup>
+
+```Ruby
+# bad
+...
+render status: 500
+...
+
+# good
+...
+render status: :forbidden
+...
+```
+
 ## Models
 
 * <a name="model-classes"></a>
@@ -262,6 +333,14 @@ programming resources.
   For a more complete example refer to the
   [RailsCast on the subject](http://railscasts.com/episodes/326-activeattr).
 
+* <a name="model-business-logic"></a>
+  Unless they have some meaning in the business domain, don't put methods in
+  your model that just format your data (like code generating HTML). These
+  methods are most likely going to be called from the view layer only, so their
+  place is in helpers. Keep your models for business logic and data-persistence
+  only.
+<sup>[[link](#model-business-logic)]</sup>
+
 ### ActiveRecord
 
 * <a name="keep-ar-defaults"></a>
@@ -295,6 +374,9 @@ programming resources.
 
     attr_accessible :login, :first_name, :last_name, :email, :password
 
+    # Rails4+ enums after attr macros, prefer the hash syntax
+    enum gender: { female: 0, male: 1 }
+
     # followed by association macros
     belongs_to :country
 
@@ -305,7 +387,7 @@ programming resources.
     validates :username, presence: true
     validates :username, uniqueness: { case_sensitive: false }
     validates :username, format: { with: /\A[A-Za-z][A-Za-z0-9._-]{2,19}\z/ }
-    validates :password, format: { with: /\A\S{8,128}\z/, allow_nil: true}
+    validates :password, format: { with: /\A\S{8,128}\z/, allow_nil: true }
 
     # next we have callbacks
     before_save :cook
@@ -332,7 +414,7 @@ programming resources.
     has_and_belongs_to_many :users
   end
 
-  # prefered way - using has_many :through
+  # preferred way - using has_many :through
   class User < ActiveRecord::Base
     has_many :memberships
     has_many :groups, through: :memberships
@@ -445,7 +527,6 @@ programming resources.
   complicated, it is preferable to make a class method instead which serves the
   same purpose of the named scope and returns an `ActiveRecord::Relation`
   object. Arguably you can define even simpler scopes like this.
-
 <sup>[[link](#named-scope-class)]</sup>
 
   ```Ruby
@@ -456,12 +537,29 @@ programming resources.
   end
   ```
 
-* <a name="beware-update-attribute"></a>
+* <a name="beware-skip-model-validations"></a>
   Beware of the behavior of the
-  [`update_attribute`](http://api.rubyonrails.org/classes/ActiveRecord/Persistence.html#method-i-update_attribute)
-  method. It doesn't run the model validations (unlike `update_attributes`) and
+  [following](http://guides.rubyonrails.org/active_record_validations.html#skipping-validations)
+  methods. They do not run the model validations and
   could easily corrupt the model state.
-<sup>[[link](#beware-update-attribute)]</sup>
+<sup>[[link](#beware-skip-model-validations)]</sup>
+
+  ```Ruby
+  # bad
+  Article.first.decrement!(:view_count)
+  DiscussionBoard.decrement_counter(:post_count, 5)
+  Article.first.increment!(:view_count)
+  DiscussionBoard.increment_counter(:post_count, 5)
+  person.toggle :active
+  product.touch
+  Billing.update_all("category = 'authorized', author = 'David'")
+  user.update_attribute(:website, 'example.com')
+  user.update_columns(last_request_at: Time.current)
+  Post.update_counters 5, comment_count: -1, action_count: 1
+
+  # good
+  user.update_attributes(website: 'example.com')
+  ```
 
 * <a name="user-friendly-urls"></a>
   Use user-friendly URLs. Show some descriptive attribute of the model in the URL
@@ -553,6 +651,54 @@ programming resources.
   end
   ```
 
+* <a name="has_many-has_one-dependent-option"></a>
+  Define the `dependent` option to the `has_many` and `has_one` associations.
+<sup>[[link](#has_many-has_one-dependent-option)]</sup>
+
+  ```Ruby
+  # bad
+  class Post < ActiveRecord::Base
+    has_many :comments
+  end
+
+  # good
+  class Post < ActiveRecord::Base
+    has_many :comments, dependent: :destroy
+  end
+  ```
+
+* <a name="save-bang"></a>
+  When persisting AR objects always use the exception raising bang! method or handle the method return value.
+  This applies to `create`, `save`, `update`, `destroy`, `first_or_create` and `find_or_create_by`.
+<sup>[[link](#save-bang)]</sup>
+
+  ```Ruby
+  # bad
+  user.create(name: 'Bruce')
+
+  # bad
+  user.save
+
+  # good
+  user.create!(name: 'Bruce')
+  # or
+  bruce = user.create(name: 'Bruce')
+  if bruce.persisted?
+    ...
+  else
+    ...
+  end
+
+  # good
+  user.save!
+  # or
+  if user.save
+    ...
+  else
+    ...
+  end
+  ```
+
 ### ActiveRecord Queries
 
 * <a name="avoid-interpolation"></a>
@@ -602,7 +748,7 @@ when you need to retrieve a single record by id.
   ```
 
 * <a name="find_by"></a>
-  Favor the use of `find_by` over `where`
+  Favor the use of `find_by` over `where` and `find_by_attribute`
 when you need to retrieve a single record by some attributes.
 <sup>[[link](#find_by)]</sup>
 
@@ -610,25 +756,11 @@ when you need to retrieve a single record by some attributes.
   # bad
   User.where(first_name: 'Bruce', last_name: 'Wayne').first
 
+  # bad
+  User.find_by_first_name_and_last_name('Bruce', 'Wayne')
+
   # good
   User.find_by(first_name: 'Bruce', last_name: 'Wayne')
-  ```
-
-* <a name="find_each"></a>
-  Use `find_each` when you need to process a lot of records.
-<sup>[[link](#find_each)]</sup>
-
-  ```Ruby
-  # bad - loads all the records at once
-  # This is very inefficient when the users table has thousands of rows.
-  User.all.each do |user|
-    NewsMailer.weekly(user).deliver_now
-  end
-
-  # good - records are retrieved in batches
-  User.find_each do |user|
-    NewsMailer.weekly(user).deliver_now
-  end
   ```
 
 * <a name="where-not"></a>
@@ -650,7 +782,7 @@ when you need to retrieve a single record by some attributes.
 <sup>[[link](#squished-heredocs)]</sup>
 
   ```Ruby
-  User.find_by_sql(<<SQL.squish)
+  User.find_by_sql(<<-SQL.squish)
     SELECT
       users.id, accounts.plan
     FROM
@@ -688,8 +820,17 @@ when you need to retrieve a single record by some attributes.
 
   ```Ruby
   # bad - application enforced default value
-  def amount
-    self[:amount] or 0
+  class Product < ActiveRecord::Base
+    def amount
+      self[:amount] || 0
+    end
+  end
+
+  # good - database enforced
+  class AddDefaultAmountToProducts < ActiveRecord::Migration
+    def change
+      change_column_default :products, :amount, 0
+    end
   end
   ```
 
@@ -722,7 +863,7 @@ when you need to retrieve a single record by some attributes.
     end
   end
 
-  # the new prefered way
+  # the new preferred way
   class AddNameToPeople < ActiveRecord::Migration
     def change
       add_column :people, :name, :string
@@ -730,11 +871,124 @@ when you need to retrieve a single record by some attributes.
   end
   ```
 
-* <a name="no-model-class-migrations"></a>
-  Don't use model classes in migrations. The model classes are constantly
-  evolving and at some point in the future migrations that used to work might
-  stop, because of changes in the models used.
-<sup>[[link](#no-model-class-migrations)]</sup>
+* <a name="define-model-class-migrations"></a>
+  If you have to use models in migrations, make sure you define them
+  so that you don't end up with broken migrations in the future
+<sup>[[link](#define-model-class-migrations)]</sup>
+
+  ```Ruby
+  # db/migrate/<migration_file_name>.rb
+  # frozen_string_literal: true
+
+  # bad
+  class ModifyDefaultStatusForProducts < ActiveRecord::Migration
+    def change
+      old_status = 'pending_manual_approval'
+      new_status = 'pending_approval'
+
+      reversible do |dir|
+        dir.up do
+          Product.where(status: old_status).update_all(status: new_status)
+          change_column :products, :status, :string, default: new_status
+        end
+
+        dir.down do
+          Product.where(status: new_status).update_all(status: old_status)
+          change_column :products, :status, :string, default: old_status
+        end
+      end
+    end
+  end
+
+  # good
+  # Define `table_name` in a custom named class to make sure that
+  # you run on the same table you had during the creation of the migration.
+  # In future if you override the `Product` class
+  # and change the `table_name`, it won't break
+  # the migration or cause serious data corruption.
+  class MigrationProduct < ActiveRecord::Base
+    self.table_name = :products
+  end
+
+  class ModifyDefaultStatusForProducts < ActiveRecord::Migration
+    def change
+      old_status = 'pending_manual_approval'
+      new_status = 'pending_approval'
+
+      reversible do |dir|
+        dir.up do
+          MigrationProduct.where(status: old_status).update_all(status: new_status)
+          change_column :products, :status, :string, default: new_status
+        end
+
+        dir.down do
+          MigrationProduct.where(status: new_status).update_all(status: old_status)
+          change_column :products, :status, :string, default: old_status
+        end
+      end
+    end
+  end
+  ```
+
+* <a name="meaningful-foreign-key-naming"></a>
+  Name your foreign keys explicitly instead of relying on Rails auto-generated
+  FK names. (http://guides.rubyonrails.org/active_record_migrations.html#foreign-keys)
+<sup>[[link](#meaningful-foreign-key-naming)]</sup>
+
+  ```Ruby
+  # bad
+  class AddFkArticlesToAuthors < ActiveRecord::Migration
+    def change
+      add_foreign_key :articles, :authors
+    end
+  end
+
+  # good
+  class AddFkArticlesToAuthors < ActiveRecord::Migration
+    def change
+      add_foreign_key :articles, :authors, name: :articles_author_id_fk
+    end
+  end
+  ```
+
+* <a name="reversible-migration"></a>
+  Don't use non-reversible migration commands in the `change` method.
+  Reversible migration commands are listed below.
+  [ActiveRecord::Migration::CommandRecorder](http://api.rubyonrails.org/classes/ActiveRecord/Migration/CommandRecorder.html)
+<sup>[[link](#reversible-migration)]</sup>
+
+  ```ruby
+  # bad
+  class DropUsers < ActiveRecord::Migration
+    def change
+      drop_table :users
+    end
+  end
+
+  # good
+  class DropUsers < ActiveRecord::Migration
+    def up
+      drop_table :users
+    end
+
+    def down
+      create_table :users do |t|
+        t.string :name
+      end
+    end
+  end
+
+  # good
+  # In this case, block will be used by create_table in rollback
+  # http://api.rubyonrails.org/classes/ActiveRecord/ConnectionAdapters.html#method-i-drop_table
+  class DropUsers < ActiveRecord::Migration
+    def change
+      drop_table :users do |t|
+        t.string :name
+      end
+    end
+  end
+  ```
 
 ## Views
 
@@ -831,7 +1085,7 @@ when you need to retrieve a single record by some attributes.
 
   ```Ruby
   # bad
-  I18n.t :record_invalid, :scope => [:activerecord, :errors, :messages]
+  I18n.t :record_invalid, scope: [:activerecord, :errors, :messages]
 
   # good
   I18n.t 'activerecord.errors.messages.record_invalid'
@@ -986,6 +1240,81 @@ your application.
   of [sidekiq](https://github.com/mperham/sidekiq) gem.
 <sup>[[link](#background-email)]</sup>
 
+
+## Active Support Core Extensions
+
+* <a name="try-bang"></a>
+  Prefer Ruby 2.3's safe navigation operator `&.` over `ActiveSupport#try!`.
+<sup>[[link](#try-bang)]</sup>
+
+```ruby
+# bad
+obj.try! :fly
+
+# good
+obj&.fly
+```
+
+* <a name="active_support_aliases"></a>
+  Prefer Ruby's Standard Library methods over `ActiveSupport` aliases.
+<sup>[[link](#active_support_aliases)]</sup>
+
+```ruby
+# bad
+'the day'.starts_with? 'th'
+'the day'.ends_with? 'ay'
+
+# good
+'the day'.start_with? 'th'
+'the day'.end_with? 'ay'
+```
+
+* <a name="active_support_extensions"></a>
+  Prefer Ruby's Standard Library over uncommon ActiveSupport extensions.
+<sup>[[link](#active_support_extensions)]</sup>
+
+```ruby
+# bad
+(1..50).to_a.forty_two
+1.in? [1, 2]
+'day'.in? 'the day'
+
+# good
+(1..50).to_a[41]
+[1, 2].include? 1
+'the day'.include? 'day'
+```
+
+* <a name="inquiry"></a>
+  Prefer Ruby's comparison operators over ActiveSupport's `Array#inquiry`, `Numeric#inquiry` and `String#inquiry`.
+<sup>[[link](#inquiry)]</sup>
+
+```ruby
+# bad - String#inquiry
+ruby = 'two'.inquiry
+ruby.two?
+
+# good
+ruby = 'two'
+ruby == 'two'
+
+# bad - Array#inquiry
+pets = %w(cat dog).inquiry
+pets.gopher?
+
+# good
+pets = %w(cat dog)
+pets.include? 'cat'
+
+# bad - Numeric#inquiry
+0.positive?
+0.negative?
+
+# good
+0 > 0
+0 < 0
+```
+
 ## Time
 
 * <a name="tz-config"></a>
@@ -1086,6 +1415,7 @@ you have time to spare:
 * [The RSpec Book](https://pragprog.com/book/achbd/the-rspec-book)
 * [The Cucumber Book](https://pragprog.com/book/hwcuc/the-cucumber-book)
 * [Everyday Rails Testing with RSpec](https://leanpub.com/everydayrailsrspec)
+* [Rails 4 Test Prescriptions](https://pragprog.com/book/nrtest2/rails-4-test-prescriptions)
 * [Better Specs for RSpec](http://betterspecs.org)
 
 # Contributing
