@@ -55,11 +55,11 @@ Rails 是一個堅持己見的框架，而這也是一份堅持己見的指南�
 * 為開發、測試及生產環境分別調整設定（在 `config/environments/` 下對應的文件）
   * 標記額外的資產 (assets) 給預編譯（如果有的話）：
 
-        ```Ruby
-        # config/environments/production.rb
-        # Precompile additional assets (application.js, application.css, and all non-JS/CSS are already added)
-        config.assets.precompile += %w( rails_admin/rails_admin.css rails_admin/rails_admin.js )
-        ```
+    ```Ruby
+    # config/environments/production.rb
+    # Precompile additional assets (application.js, application.css, and all non-JS/CSS are already added)
+    config.assets.precompile += %w( rails_admin/rails_admin.css rails_admin/rails_admin.js )
+    ```
 
 * 將所有環境都通用的設定檔放在 `config/application.rb` 檔案。
 * 另外開一個與生產環境(production enviroment)幾乎相同的 `staging` 環境。

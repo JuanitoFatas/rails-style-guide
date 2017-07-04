@@ -59,11 +59,11 @@
 
   * 添加需要预编译的额外静态资源文件（如果有的话）：
 
-        ```Ruby
-        # config/environments/production.rb
-        # 预编译额外的静态资源文件(application.js, application.css, 以及所有已经被加入的非 JS 或 CSS 的文件)
-        config.assets.precompile += %w( rails_admin/rails_admin.css rails_admin/rails_admin.js )
-        ```
+    ```Ruby
+    # config/environments/production.rb
+    # 预编译额外的静态资源文件(application.js, application.css, 以及所有已经被加入的非 JS 或 CSS 的文件)
+    config.assets.precompile += %w( rails_admin/rails_admin.css rails_admin/rails_admin.js )
+    ```
 
 * <a name="app-config"></a>
   将所有环境下都通用的配置放在 `config/application.rb` 文件中。
